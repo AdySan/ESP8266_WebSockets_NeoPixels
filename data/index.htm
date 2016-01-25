@@ -1,0 +1,108 @@
+<html>
+<head>
+<meta content="width=device-width, initial-scale=0.9, maximum-scale=0.9" name="viewport">
+<script language="javascript" type="text/javascript" src=jquery-2.1.4.min.js></script>
+<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+<script>
+    $(document).bind('mobileinit',function(){
+        $.mobile.pushStateEnabled = false;
+    });
+</script>
+<script language="javascript" type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
+<script language="javascript" type="text/javascript" src=ady.js></script>
+<meta charset="UTF-8">
+<script>
+	// var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+	var connection = new WebSocket('ws://websocketstest.local:81/', ['arduino']);
+	connection.onopen = function () {  connection.send('Connect ' + new Date()); }; 
+	connection.onerror = function (error) {    console.log('WebSocket Error ', error);};
+	connection.onmessage = function (e) {  
+		console.log('Server: ', e.data);
+		$('#SystemStatusClicker').css("color", "green" );
+		IssueSystemMessage( "WebSocket Connected!" );
+	};
+	connection.onclose = function(e) {
+		console.log('Server: ', e.data);
+		$('#SystemStatusClicker').css("color", "red" );
+		IssueSystemMessage( "WebSocket Disconnected!" );
+	 };
+	function sendRGB(){
+	  	var r = parseInt(document.getElementById('r').value).toString(16);  
+		var g = parseInt(document.getElementById('g').value).toString(16);  
+		var b = parseInt(document.getElementById('b').value).toString(16);  
+		if(r.length < 2) { r = '0' + r; }   
+		if(g.length < 2) { g = '0' + g; }   
+		if(b.length < 2) { b = '0' + b; }   
+		if(r == 'NaN') {r = '00'; }
+		if(g == 'NaN') {g = '00'; }
+		if(b == 'NaN') {b = '00'; }
+		var rgb = '#'+r+g+b;    
+		console.log('RGB: ' + rgb); 
+		connection.send(rgb);
+	}
+    function OnePixel(){
+        var pixel = parseInt(document.getElementById('pixel').value).toString(16);  
+        console.log('Pixel: ' + pixel); 
+        r = 'ff'; g = 'ff'; b = 'ff'; 
+        var pixelNumber = '*'+pixel;    
+        console.log('RGB: ' + pixel); 
+        connection.send(pixelNumber);
+    }
+    function PixelsToggle(){
+        var OnOff = document.getElementById('flipper').value;  
+        console.log('OnOff: ' + OnOff); 
+        if(r.length < 2) { r = '0' + r; }   
+        if(g.length < 2) { g = '0' + g; }   
+        if(b.length < 2) { b = '0' + b; }   
+
+        if(OnOff == 'off') {r = '00'; g = '00'; b = '00'; }
+        if(OnOff == 'on') {r = 'ff'; g = 'ff'; b = 'ff'; }
+        var rgb = '#'+r+g+b;    
+        console.log('RGB: ' + rgb); 
+        connection.send(rgb);
+    }
+</script>
+
+
+
+<style>
+.collapsible { display:none; }
+.inbutton { background-color:blue; }
+#SystemMessage { position: absolute; top: 5px; right: 5px; background-color: DarkSlateBlue; color: #ffffff; right: 5px; display:none; }
+#SpeedMessage { position: absolute; top: 5px; right: 5px; background-color: White; color: #ff0000; right: 400; display:none; }
+
+
+
+.ui-li .ui-btn-inner a.ui-link-inherit, .ui-li-static.ui-li {
+    display: block !important;
+    padding: 0.9em 75px 0.9em 15px !important;
+}
+div.ui-slider-switch {
+    right: 0 !important;
+    width: 100% !important;
+}
+
+
+body {
+margin: 10px;
+padding: 10px;
+}
+
+</style>
+</head>
+<body>
+<h1 align="center">WebSockets Slider</h1>
+<h2>R</h2> <input id="r" type="range" min="0" max="255" step="1" onchange="sendRGB();" />
+<h2>G</h2> <input id="g" type="range" min="0" max="255" step="1" onchange="sendRGB();" />
+<h2>B</h2> <input id="b" type="range" min="0" max="255" step="1" onchange="sendRGB();" />
+<h2>Pixel</h2> <input id="pixel" type="range" min="1" max="16" step="1" onchange="OnePixel();" />
+
+<label for="flipper"><h2>Switch</h2></label>
+<select name="slider" id="flipper" data-role="slider" onchange="PixelsToggle();" align="center">
+    <option value="off">Off</option>
+    <option value="on">On</option>
+</select> 
+
+<div id=SystemMessage>...</div>
+</body>
+</html>

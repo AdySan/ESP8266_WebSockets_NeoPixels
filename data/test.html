@@ -1,0 +1,63 @@
+<html>
+<head>
+<script language="javascript" type="text/javascript" src=jquery-2.1.4.min.js></script>
+<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+<script>
+    $(document).bind('mobileinit',function(){
+        $.mobile.pushStateEnabled = false;
+    });
+</script>
+<script language="javascript" type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
+<script language="javascript" type="text/javascript" src=ady.js></script>
+<meta charset="UTF-8">
+<script>
+	// var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+	var connection = new WebSocket('ws://192.168.1.182:81/', ['arduino']);
+	connection.onopen = function () {  connection.send('Connect ' + new Date()); }; 
+	connection.onerror = function (error) {    console.log('WebSocket Error ', error);};
+	connection.onmessage = function (e) {  
+		console.log('Server: ', e.data);
+		$('#SystemStatusClicker').css("color", "green" );
+		IssueSystemMessage( "WebSocket Connected!" );
+	};
+	connection.onclose = function(e) {
+		console.log('Server: ', e.data);
+		$('#SystemStatusClicker').css("color", "red" );
+		IssueSystemMessage( "WebSocket Disconnected!" );
+	 };
+	function sendRGB(){
+	  	var r = parseInt(document.getElementById('r').value).toString(16);  
+		var g = parseInt(document.getElementById('g').value).toString(16);  
+		var b = parseInt(document.getElementById('b').value).toString(16);  
+		if(r.length < 2) { r = '0' + r; }   
+		if(g.length < 2) { g = '0' + g; }   
+		if(b.length < 2) { b = '0' + b; }   
+		if(r == 'NaN') {r = '00'; }
+		if(g == 'NaN') {g = '00'; }
+		if(b == 'NaN') {b = '00'; }
+		var rgb = '#'+r+g+b;    
+		console.log('RGB: ' + rgb); 
+		connection.send(rgb);
+	}
+</script>
+
+<style>
+.collapsible { display:none; }
+.inbutton { background-color:blue; }
+#SystemMessage { position: absolute; top: 5px; right: 5px; background-color: DarkSlateBlue; color: #ffffff; right: 5px; display:none; }
+#SpeedMessage { position: absolute; top: 5px; right: 5px; background-color: White; color: #ff0000; right: 400; display:none; }
+</style>
+</head>
+<body>
+LED Control:<br/>
+<br/>
+<form>
+    <label for="slider-1">Slider:</label>
+    <input type="range" name="slider-1" id="slider-1" min="0" max="100" value="50">
+</form>
+R: <input id="r" type="range" min="0" max="255" step="1" onchange="sendRGB();" /><br/>
+G: <input id="g" type="range" min="0" max="255" step="1" onchange="sendRGB();" /><br/>
+B: <input id="b" type="range" min="0" max="255" step="1" onchange="sendRGB();" /><br/>
+<div id=SystemMessage>...</div>
+</body>
+</html>
