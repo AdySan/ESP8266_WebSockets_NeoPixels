@@ -6,22 +6,19 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <Hash.h>
-#include <NeoPixelBus.h>
 #include <FS.h>
 
-#define pixelCount 16
-#define colorSaturation 255
-NeoPixelBus strip = NeoPixelBus(pixelCount, 8, NEO_GRB | NEO_KHZ800);
-RgbColor red = RgbColor(colorSaturation, 0, 0);
-RgbColor green = RgbColor(0, colorSaturation, 0);
-RgbColor blue = RgbColor(0, 0, colorSaturation);
-RgbColor white = RgbColor(colorSaturation);
-RgbColor black = RgbColor(0);
+
+const int LDR = A0;
+const int BUTTON = 4;
+const int RED = 15;
+const int GREEN = 12;
+const int BLUE = 13;
 
 #define USE_SERIAL Serial
 
-const char* ssid     = "*****";
-const char* password = "*****";
+const char* ssid     = "WEAL";
+const char* password = "macaroni12";
 const char* mDNSid   = "WebsocketsTest";
 
 ESP8266WiFiMulti WiFiMulti;
@@ -153,15 +150,6 @@ void handleFileList() {
   server.send(200, "text/json", output);
 }
 
-void setColor(RgbColor color, int pixel) {
-
-  for (int i=0; i<pixelCount; i++) {
-    strip.SetPixelColor(i, black);
-  }
-  strip.SetPixelColor(pixel, color);
-  strip.Show();
-}
-
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
 
@@ -186,22 +174,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                 // decode rgb data
                 uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);
 
-                // NeoPixels
-                for (int i=0; i<pixelCount; i++) {
-                  strip.SetPixelColor(i, RgbColor(((rgb >> 16) & 0xFF), ((rgb >> 8) & 0xFF),((rgb >> 0) & 0xFF) ));
-                }
-                strip.Show();
+                analogWrite(RED, ((rgb >> 16) & 0xFF)*4);
+                analogWrite(GREEN, ((rgb >> 8) & 0xFF)*4);
+                analogWrite(BLUE, ((rgb >> 0) & 0xFF)*4);
             }
 
             if(payload[0] == '*') {
-                // we get Pixel number
-                uint32_t PixelNumber = (uint32_t) strtol((const char *) &payload[1], NULL, 16);
-                // NeoPixels
-                for (int i=0; i<pixelCount; i++) {
-                  strip.SetPixelColor(i, RgbColor(0x00, 0x00,0x00));
-                }
-                strip.SetPixelColor(PixelNumber, RgbColor(0xff, 0xff,0xff));
-                strip.Show();
+
             }
 
             break;
@@ -287,9 +266,12 @@ void setup() {
   MDNS.addService("http", "tcp", 80);
   MDNS.addService("ws", "tcp", 81);
 
-  // Initialize NeoPixel Strip
-  strip.Begin();
-  strip.Show();
+  // Initialize LDR, Button and RGB LED
+    pinMode(LDR, INPUT);
+    pinMode(BUTTON, INPUT);
+    pinMode(RED, OUTPUT);
+    pinMode(GREEN, OUTPUT);
+    pinMode(BLUE, OUTPUT);
 }
 
 void loop() {
